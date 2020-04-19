@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <input type="text" id="name">
+  <button id="setname">设置</button>
+  <input type="text" id="text">
+  <button id="btn" type="button">发送</button>
+  <div id="container">
+
+  </div>
+  <script>
+    var ws = null;
+    // ws.onopen = function () {
+    //   console.log('来自客户端的信息')
+    // }
+    // ws.onmessage = function (e) {
+    //   console.log(e.data)
+    // }
+
+    // 1. 必须先设置名字
+    document.getElementById('setname').onclick = function () {
+      var name = document.getElementById('name').value;
+      if (name === '') return console.log('名字为空')
+
+      var ws = new WebSocket('ws://localhost:2333')
+
+      ws.onopen = function () {
+        ws.send(JSON.stringify({
+          name: name,
+          type: "setname"
+        }))
+      }
+      // 2. 才能发言
+      function sendd() {
+        var text = document.getElementById('text')
+        if (text.value === '') return;
+        ws.send(JSON.stringify({
+          text: text.value,
+          type: "chat"
+        }));
+        text.value = '';
+      }
+      document.getElementById('btn').onclick = sendd;
+      document.getElementById('text').onkeyup = function (e) {
+        if (e.keyCode !== 13) return;
+        sendd();
+      }
+
+      ws.onmessage = function (e) {
+        // document.body.innerHTML += '<p>' + e.data + '</p>'
+        // var p = document.createElement('p');
+        // p.innerHTML = e.data;
+        // var divv = document.createElement('div')
+        // var data = JSON.parse(e.data)
+        // switch (data.type) {
+        //   case 'serverinfo':
+        //     divv.style.color = "#00f"
+        //     divv.innerHTML = data.info
+        //     break;
+        //   case 'chat':
+
+        //   default:
+        //     break;
+        // }
+        var con = document.getElementById('container')
+        var divvv = createChatPanel(JSON.parse(e.data))
+        // con.appendChild(divvv);
+        con.insertBefore(divvv, con.children[0]);
+      }
+      // document.getElementById('setname').style.display = 'none';
+      document.getElementById('setname').setAttribute('disabled', true)
+    }
+
+    function createChatPanel(data) {
+      var name = data.name
+      var text = data.text
+      var divv = document.createElement('div')
+      var span1 = document.createElement('span')
+      var span2 = document.createElement('span')
+
+      span1.innerHTML = name + "   " + (new Date()).toString()
+      span2.innerHTML = text
+
+      span1.style.color = '#00f'
+      span1.style.fontWeight = '900'
+
+      divv.appendChild(span1)
+      divv.appendChild(document.createElement('br'))
+      divv.appendChild(span2)
+
+      return divv
+    }
+  </script>
+</body>
+
+</html>
